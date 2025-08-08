@@ -171,7 +171,27 @@ CREATE POLICY "Users can insert own achievements"
 ON public.achievements FOR INSERT 
 WITH CHECK (auth.uid() = user_id);
 
--- 7. WAITLIST TABLE (pour la landing page)
+-- 7. MATCH FEEDBACK TABLE
+CREATE TABLE IF NOT EXISTS public.match_feedback (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  match_id UUID REFERENCES public.matches(id) NOT NULL,
+  user_id UUID REFERENCES auth.users(id) NOT NULL,
+  decision TEXT CHECK (decision IN ('meet', 'continue', 'friends')),
+  rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+  feedback TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+  UNIQUE(match_id, user_id)
+);
+
+-- Enable RLS
+ALTER TABLE public.match_feedback ENABLE ROW LEVEL SECURITY;
+
+-- Policy
+CREATE POLICY "Users can manage own feedback" 
+ON public.match_feedback FOR ALL 
+USING (auth.uid() = user_id);
+
+-- 8. WAITLIST TABLE (pour la landing page)
 CREATE TABLE IF NOT EXISTS public.waitlist (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
