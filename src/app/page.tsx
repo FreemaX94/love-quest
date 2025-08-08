@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function LandingPage() {
   const [email, setEmail] = useState('')
@@ -56,6 +57,27 @@ export default function LandingPage() {
     e.preventDefault()
     if (!email) return
 
+    try {
+      // Save to Supabase
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('waitlist')
+        .insert({ 
+          email,
+          metadata: {
+            source: 'landing_page',
+            timestamp: new Date().toISOString()
+          }
+        })
+      
+      if (error && error.code !== '23505') { // Ignore duplicate email errors
+        console.error('Error saving to waitlist:', error)
+      }
+    } catch (err) {
+      console.error('Error:', err)
+    }
+
+    // Also save to localStorage as backup
     const waitlist = JSON.parse(localStorage.getItem('waitlist') || '[]')
     waitlist.push({ email, date: new Date().toISOString() })
     localStorage.setItem('waitlist', JSON.stringify(waitlist))

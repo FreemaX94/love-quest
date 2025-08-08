@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 interface Question {
   id: string
@@ -365,6 +367,11 @@ export default function OnboardingPage() {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([])
   const [textAnswer, setTextAnswer] = useState('')
   const [isComplete, setIsComplete] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  
+  const router = useRouter()
+  const supabase = createClient()
 
   const question = questions[currentQuestion]
   const progress = ((currentQuestion + 1) / questions.length) * 100
@@ -409,11 +416,91 @@ export default function OnboardingPage() {
     }
   }
 
-  const completeOnboarding = () => {
-    // Sauvegarder les réponses
-    localStorage.setItem('onboarding_answers', JSON.stringify(answers))
-    localStorage.setItem('onboarding_complete', 'true')
-    setIsComplete(true)
+  const completeOnboarding = async () => {
+    setIsSaving(true)
+    setError(null)
+    
+    try {
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError || !user) {
+        throw new Error('Vous devez être connecté pour compléter le questionnaire')
+      }
+      
+      // Save questionnaire responses
+      const responsesToSave = Object.entries(answers).map(([questionId, answer]) => {
+        const question = questions.find(q => q.id === questionId)
+        return {
+          user_id: user.id,
+          question_id: questionId,
+          category: question?.category || 'unknown',
+          answer: answer
+        }
+      })
+      
+      const { error: responsesError } = await supabase
+        .from('questionnaire_responses')
+        .insert(responsesToSave)
+      
+      if (responsesError) throw responsesError
+      
+      // Extract values and interests from answers
+      const values = []
+      const interests = []
+      
+      // Extract from specific questions
+      if (answers.values_1) values.push(answers.values_1)
+      if (answers.values_3) values.push(answers.values_3)
+      if (answers.lifestyle_1) interests.push(answers.lifestyle_1)
+      if (answers.lifestyle_3) interests.push(answers.lifestyle_3)
+      
+      // Update user profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          onboarding_complete: true,
+          values: values.slice(0, 5),
+          interests: interests.slice(0, 5),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id)
+      
+      if (profileError) {
+        // If profile doesn't exist, create it
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: user.id,
+            onboarding_complete: true,
+            values: values.slice(0, 5),
+            interests: interests.slice(0, 5)
+          })
+        
+        if (insertError) throw insertError
+      }
+      
+      // Save to localStorage as backup
+      localStorage.setItem('onboarding_answers', JSON.stringify(answers))
+      localStorage.setItem('onboarding_complete', 'true')
+      
+      setIsComplete(true)
+      
+      // Redirect to dashboard after 2 seconds
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 2000)
+      
+    } catch (err: any) {
+      console.error('Error saving onboarding:', err)
+      setError(err.message || 'Une erreur est survenue lors de la sauvegarde')
+      // Still mark as complete locally
+      localStorage.setItem('onboarding_answers', JSON.stringify(answers))
+      localStorage.setItem('onboarding_complete', 'true')
+      setIsComplete(true)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const getCategoryColor = (category: string) => {
@@ -447,17 +534,23 @@ export default function OnboardingPage() {
             Profil Complété !
           </h1>
           <p className="text-white/80 text-xl mb-8">
-            On analyse tes réponses pour te trouver le match parfait...
+            {isSaving ? 'Sauvegarde en cours...' : 'On analyse tes réponses pour te trouver le match parfait...'}
           </p>
+          {error && (
+            <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-3 mb-4 max-w-md mx-auto">
+              <p className="text-red-200 text-sm">{error}</p>
+            </div>
+          )}
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 max-w-md mx-auto">
             <p className="text-white mb-4">
               Tu recevras une notification lundi prochain avec ton match de la semaine !
             </p>
             <button
-              onClick={() => window.location.href = '/dashboard'}
-              className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-8 py-3 rounded-full font-semibold hover:from-pink-600 hover:to-purple-600 transition"
+              onClick={() => router.push('/dashboard')}
+              disabled={isSaving}
+              className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-8 py-3 rounded-full font-semibold hover:from-pink-600 hover:to-purple-600 transition disabled:opacity-50"
             >
-              Voir mon Dashboard
+              {isSaving ? 'Sauvegarde...' : 'Voir mon Dashboard'}
             </button>
           </div>
         </div>
