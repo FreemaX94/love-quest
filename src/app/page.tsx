@@ -195,7 +195,7 @@ export default function LandingPage() {
               <h3 className="text-xl font-bold text-white mb-3">7 Jours Guidés</h3>
               <p className="text-white/70">
                 Chaque jour, une activité pour vous rapprocher. Du jeu au premier appel, 
-                jusqu'à la décision finale.
+                jusqu'à la décision finale. Stop possible à tout moment.
               </p>
             </div>
           </div>
@@ -205,6 +205,18 @@ export default function LandingPage() {
             <h3 className="text-2xl font-bold text-white mb-8 text-center">
               La Progression Magique des 7 Jours
             </h3>
+            
+            {/* Important Notice */}
+            <div className="bg-red-500/20 border border-red-500/40 rounded-xl p-4 mb-6">
+              <p className="text-white text-sm flex items-start gap-2">
+                <span className="text-red-400">⚠️</span>
+                <span>
+                  <strong>Respect mutuel garanti :</strong> Les deux personnes peuvent arrêter à tout moment. 
+                  Si l'un des deux ne se sent pas à l'aise, la semaine s'arrête immédiatement. 
+                  Pas de pression, que du respect.
+                </span>
+              </p>
+            </div>
             
             <div className="space-y-4">
               {[
@@ -304,6 +316,57 @@ export default function LandingPage() {
             <div className="text-center">
               <p className="text-4xl font-bold text-white mb-2">42%</p>
               <p className="text-white/60">encore ensemble après 3 mois</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-16 bg-black/20">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <h2 className="text-3xl font-bold text-white text-center mb-12">
+            Questions Fréquentes
+          </h2>
+          
+          <div className="space-y-4">
+            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10">
+              <h3 className="text-white font-bold mb-2 flex items-center gap-2">
+                🤔 Et si ça ne fonctionne pas entre nous ?
+              </h3>
+              <p className="text-white/70">
+                Chaque personne peut arrêter à tout moment, sans justification. Un simple bouton "Arrêter la semaine" 
+                et c'est fini. Respect total, zéro pression. On vous rematch lundi prochain.
+              </p>
+            </div>
+            
+            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10">
+              <h3 className="text-white font-bold mb-2 flex items-center gap-2">
+                😨 Je suis obligé(e) de faire toutes les activités ?
+              </h3>
+              <p className="text-white/70">
+                Non ! Les activités sont des suggestions pour vous aider à progresser. Si vous préférez juste discuter, 
+                c'est parfait aussi. L'important c'est la connexion, pas la checklist.
+              </p>
+            </div>
+            
+            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10">
+              <h3 className="text-white font-bold mb-2 flex items-center gap-2">
+                🔒 Mes données sont-elles protégées ?
+              </h3>
+              <p className="text-white/70">
+                100% sécurisé. Pas de photos publiques, pas de profil visible par tous. 
+                Seule la personne avec qui vous matchez voit vos infos, et seulement progressivement.
+              </p>
+            </div>
+            
+            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10">
+              <h3 className="text-white font-bold mb-2 flex items-center gap-2">
+                ⏰ Que se passe-t-il après 7 jours ?
+              </h3>
+              <p className="text-white/70">
+                3 choix : Rencontre IRL, continuer en ligne une semaine de plus, ou rester amis. 
+                Si vous ne choisissez pas la même chose, l'app vous rematch avec quelqu'un d'autre lundi.
+              </p>
             </div>
           </div>
         </div>
